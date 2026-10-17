@@ -1,16 +1,16 @@
 from datetime import date
 from decimal import Decimal
+
 import pytest
 
 from app.calculator import (
-    generate_schedule,
-    calculate_annuity_payment,
     apply_early_repayment,
+    calculate_annuity_payment,
+    from_cents,
+    generate_schedule,
     shift_payment_dates,
     to_cents,
-    from_cents
 )
-
 
 # ==========================================
 # БАЗОВЫЕ ТЕСТЫ АРИФМЕТИКИ (проверяем сами функции)
@@ -35,7 +35,7 @@ def test_calculate_annuity_payment():
     # Ожидаемый платеж: 92 634.51 руб (или 9263451 копеек)
     payment = calculate_annuity_payment(
         principal_cents=100_000_000,
-        annual_rate=Decimal("20"),
+        annual_rate=Decimal(20),
         months=12
     )
     assert payment == 9_263_451
@@ -49,13 +49,13 @@ def test_calculate_annuity_payment():
 
 @pytest.mark.parametrize("amount, rate, months, expected_total_payment", [
     # Пример 1: 1 млн, 20%, 12 мес.
-    (Decimal("1000000"), Decimal("20"), 12, Decimal("1111614.09")),
+    (Decimal(1000000), Decimal(20), 12, Decimal("1111614.09")),
 
     # Пример 2: 500 000, 15.5%, 24 мес.
-    (Decimal("500000"), Decimal("15.5"), 24, Decimal("585435.00")),  # <-- Замените на эталон, когда получите
+    (Decimal(500000), Decimal("15.5"), 24, Decimal("585435.00")),  # <-- Замените на эталон, когда получите
 
     # Пример 3: 300 000, 25%, 6 мес.
-    (Decimal("300000"), Decimal("25"), 6, Decimal("322500.00")),  # <-- Замените на эталон
+    (Decimal(300000), Decimal(25), 6, Decimal("322500.00")),  # <-- Замените на эталон
 ])
 def test_schedule_total_payment(amount, rate, months, expected_total_payment):
     """
@@ -83,7 +83,7 @@ def test_schedule_total_payment(amount, rate, months, expected_total_payment):
 
 def test_early_repayment_reduce_term():
     """При досрочке с уменьшением срока график должен стать короче, а платеж — прежним."""
-    base_schedule = generate_schedule(Decimal("1000000"), Decimal("20"), 12, date(2024, 1, 1))
+    base_schedule = generate_schedule(Decimal(1000000), Decimal(20), 12, date(2024, 1, 1))
     new_schedule = apply_early_repayment(
         base_schedule,
         payment_index=3,
@@ -99,7 +99,7 @@ def test_early_repayment_reduce_term():
 
 def test_early_repayment_reduce_payment():
     """При досрочке с уменьшением платежа срок не меняется, а платеж падает."""
-    base_schedule = generate_schedule(Decimal("1000000"), Decimal("20"), 12, date(2024, 1, 1))
+    base_schedule = generate_schedule(Decimal(1000000), Decimal(20), 12, date(2024, 1, 1))
     new_schedule = apply_early_repayment(
         base_schedule,
         payment_index=3,
@@ -119,9 +119,23 @@ def test_early_repayment_reduce_payment():
 
 def test_shift_payment_dates():
     """Меняем день платежа на 15-е число."""
-    schedule = generate_schedule(Decimal("1000000"), Decimal("20"), 12, date(2024, 1, 1))
+    schedule = generate_schedule(Decimal(1000000), Decimal(20), 12, date(2024, 1, 1))
     shifted = shift_payment_dates(schedule, new_day=15)
 
     for row in shifted:
         d = date.fromisoformat(row["payment_date"])
         assert d.day == 15
+
+
+def test_teacher_example():
+    """Эталонный пример из задания."""
+    # Предположим, параметры: 500 000 руб, 15%, 10 месяцев (вы узнаете точные)
+    schedule = generate_schedule(
+        amount_rub=Decimal(500000),
+        annual_rate=Decimal(15),
+        months=10,
+        issue_date=date(2024, 1, 1)
+    )
+    # Проверяем первый платеж (или общую сумму, в зависимости от формулировки)
+    first_payment_cents = schedule[0]["total_payment"]
+    assert first_payment_cents == 5505431

@@ -1,12 +1,12 @@
 from datetime import date
+from decimal import ROUND_HALF_UP, Decimal
+
 from dateutil.relativedelta import relativedelta
-from decimal import Decimal, ROUND_HALF_UP
-from typing import List, Dict
 
 
-def to_cents(amount: Decimal | float | int) -> int:
+def to_cents(amount: Decimal | float) -> int:
     """Переводит рубли в копейки (целое число)."""
-    return int((Decimal(str(amount)) * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    return int((Decimal(str(amount)) * 100).quantize(Decimal(1), rounding=ROUND_HALF_UP))
 
 
 def from_cents(cents: int) -> Decimal:
@@ -34,7 +34,7 @@ def calculate_annuity_payment(principal_cents: int, annual_rate: Decimal, months
     payment = Decimal(principal_cents) * (monthly_rate * compound) / (compound - Decimal(1))
 
     # Округляем до целых копеек (по правилам математики)
-    return int(payment.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    return int(payment.quantize(Decimal(1), rounding=ROUND_HALF_UP))
 
 
 def generate_schedule(
@@ -42,7 +42,7 @@ def generate_schedule(
         annual_rate: Decimal,
         months: int,
         issue_date: date,
-) -> List[Dict]:
+) -> list[dict]:
     """
     Генерирует график аннуитетных платежей.
     Возвращает список словарей с полями:
@@ -61,7 +61,7 @@ def generate_schedule(
         payment_date = issue_date + relativedelta(months=i)
 
         # Проценты на остаток долга
-        interest_part = int((Decimal(remaining_debt) * monthly_rate).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+        interest_part = int((Decimal(remaining_debt) * monthly_rate).quantize(Decimal(1), rounding=ROUND_HALF_UP))
 
         # Тело кредита (в последний платеж корректируем, чтобы закрыть долг ровно в 0)
         if i == months:
@@ -85,12 +85,12 @@ def generate_schedule(
 
 
 def apply_early_repayment(
-        schedule: List[Dict],
+        schedule: list[dict],
         payment_index: int,
         amount_cents: int,
         reduce_term: bool = True,
-        annual_rate: Decimal = Decimal("20"),
-) -> List[Dict]:
+        annual_rate: Decimal = Decimal(20),
+) -> list[dict]:
     """
     Применяет досрочное погашение.
     payment_index: номер платежа, ПОСЛЕ которого вносится досрочка (1, 2, ...).
@@ -122,7 +122,7 @@ def apply_early_repayment(
 
         while new_debt > 0:
             current_date += relativedelta(months=1)
-            interest = int((Decimal(new_debt) * monthly_rate).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+            interest = int((Decimal(new_debt) * monthly_rate).quantize(Decimal(1), rounding=ROUND_HALF_UP))
             principal = old_payment - interest
 
             # Если последний платеж меньше обычного
@@ -151,7 +151,7 @@ def apply_early_repayment(
 
         for i in range(1, remaining_months + 1):
             current_date += relativedelta(months=1)
-            interest = int((Decimal(new_debt) * monthly_rate).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+            interest = int((Decimal(new_debt) * monthly_rate).quantize(Decimal(1), rounding=ROUND_HALF_UP))
 
             if i == remaining_months:
                 principal = new_debt
@@ -171,7 +171,7 @@ def apply_early_repayment(
 
         return new_schedule
 
-def shift_payment_dates(schedule: List[Dict], new_day: int) -> List[Dict]:
+def shift_payment_dates(schedule: list[dict], new_day: int) -> list[dict]:
     """Меняет день платежа во всем графике."""
     for row in schedule:
         d = date.fromisoformat(row["payment_date"])

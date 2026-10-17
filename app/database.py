@@ -25,7 +25,7 @@ engine = create_async_engine(
     pool_size=POOL_SIZE,
     max_overflow=MAX_OVERFLOW,
     pool_timeout=POOL_TIMEOUT,
-    pool_recycle=300,          # оставляем, это работает
+    pool_recycle=POOL_RECYCLE,          # оставляем, это работает
     pool_pre_ping=True,
     connect_args={
         "server_settings": {

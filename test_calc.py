@@ -1,11 +1,12 @@
-from decimal import Decimal
 from datetime import date
-from app.calculator import generate_schedule, from_cents
+from decimal import Decimal
+
+from app.calculator import from_cents, generate_schedule
 
 # Пример: 1 млн рублей, 20% годовых, 12 месяцев, выдан 1 января 2024
 schedule = generate_schedule(
-    amount_rub=Decimal("1000000"),
-    annual_rate=Decimal("20"),
+    amount_rub=Decimal(1000000),
+    annual_rate=Decimal(20),
     months=12,
     issue_date=date(2024, 1, 1),
 )

@@ -5,20 +5,16 @@ if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from contextlib import asynccontextmanager
-
-from sqlalchemy import text
-
-from app.database import engine, get_pool_status
-
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from decimal import Decimal
 
-from app.database import get_session
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.calculator import from_cents, generate_schedule
+from app.database import engine, get_pool_status, get_session
 from app.models import Credit
-from app.calculator import generate_schedule, from_cents
-from app.schemas import ScheduleResponse, PaymentRow
+from app.schemas import PaymentRow, ScheduleResponse
 
 
 @asynccontextmanager

@@ -1,6 +1,7 @@
 from datetime import date
-from pydantic import BaseModel, ConfigDict
-from typing import List
+
+from pydantic import BaseModel
+
 
 class PaymentRow(BaseModel):
     payment_date: str
@@ -16,4 +17,4 @@ class ScheduleResponse(BaseModel):
     annual_rate: float
     term_months: int
     issue_date: date
-    schedule: List[PaymentRow]
+    schedule: list[PaymentRow]

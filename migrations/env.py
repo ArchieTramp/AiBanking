@@ -7,16 +7,16 @@ if sys.platform == "win32":
 import os
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import pool, text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from alembic import context
+import app.models  # noqa: F401  # важно: без этого таблицы не зарегистрируются в metadata
 
 # >>> 1. Импорт вашего Base и моделей <<<
 # ЗАМЕНИТЕ пути на реальные. Если Base лежит в app/database.py:
 from app.database import Base
-import app.models  # noqa: F401  # важно: без этого таблицы не зарегистрируются в metadata
 
 config = context.config
 
