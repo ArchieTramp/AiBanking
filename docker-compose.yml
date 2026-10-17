@@ -1,0 +1,68 @@
+services:
+  # 1. База данных: PostgreSQL с pgvector
+  postgres:
+    image: pgvector/pgvector:pg16
+    command:
+      - postgres
+      - -c
+      - tcp_keepalives_idle=600
+      - -c
+      - tcp_keepalives_interval=30
+      - -c
+      - tcp_keepalives_count=10
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hexlet
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hexlet"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # 2. Temporal Server
+  temporal:
+    image: temporalio/auto-setup:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB=postgres12
+      - POSTGRES_USER=postgres
+      - POSTGRES_PWD=postgres
+      - POSTGRES_SEEDS=postgres
+      - POSTGRES_DB=hexlet
+    ports:
+      - "7233:7233"
+
+  # 3. Temporal Web UI
+  temporal-ui:
+    image: temporalio/ui:latest
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    ports:
+      - "8080:8080"
+
+  # 4. Ваше приложение FastAPI
+  api:
+    build: .  # Требуется Dockerfile в корне проекта
+    depends_on:
+      postgres:
+        condition: service_healthy
+      temporal:
+        condition: service_started
+    environment:
+      # ВАЖНО: хост — это имя сервиса (postgres), а не localhost!
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/hexlet
+      - TEMPORAL_ADDRESS=temporal:7233
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
